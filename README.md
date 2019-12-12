@@ -17,7 +17,7 @@ If you are interested in
   and this [example jupyter notebook](XXX) on how to use it
 
 - using our evaluation data to compare your own synapse prediction method, see
-  this [section](Evaluation-on-large-scale-dataset).
+  this [section](#evaluation-on-large-scale-dataset).
 
 - training and/or predicting on your own data, find our scripts
   [here](https://github.com/funkelab/synful)
