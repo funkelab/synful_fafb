@@ -16,17 +16,11 @@ If you are interested in
   SQL dump](https://cremi.org/static/data/20191211_fafbv14_buhmann2019_li20190805.db)
   and this [example jupyter notebook](XXX) on how to use it
 
-- using our evaluation data to compare your own synapse prediction method, see
-  this [section](#evaluation-on-large-scale-dataset).
+- using our evaluation data to compare your own synapse prediction method, stay tuned for our data release (end of December 2019)!
 
-- training and/or predicting on your own data, find our scripts
-  [here](https://github.com/funkelab/synful)
+- training and/or predicting on your own data, stay tuned for our source code release (end of December 2019)!
 
-Note that this repository is work-in-progress. Please don't hesitate to create
+Please don't hesitate to open
 an issue or write us an email ([Julia
 Buhmann](mailto:buhmannj@janelia.hhmi.org) or [Jan
-Funke](mailto:funkej@janelia.hhmi.org)) if something is unclear.
-
-## Evaluation on large-scale dataset
-
-Data and evaluation scripts will be available soon!
+Funke](mailto:funkej@janelia.hhmi.org)) if you have any questions!
