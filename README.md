@@ -1,38 +1,32 @@
-Synful_FAFB
-===========
+# Automatic Detection of Synaptic Partners in a Whole-Brain Drosophila EM Dataset
 
-## Overview
-
-Synful: A project for the automated detection of synaptic partners in Electron Microscopy brain data using U-Nets.
-
-This repos serves as an entry point for accessing and interacting with predicted synaptic partners in the fly brain (FAFB) dataset.
-If you are interested
-
-- in training and/or predicting on your own data, find scripts here: https://github.com/funkelab/synful
-
-- using large-scale ground-truth synapse data to evaluate your own method on FAFB, see this [section](Evaluation-on-large-scale-dataset).
-
-- downloading all 244 Million predicted synaptic connections in FAFB, see XXX
-
-- using predicted synapses in your circuit reconstruction workflow inside CATMAID: http://github.com/unidesigner/circuitmap
-
-
-For more details, see the following publication:
-
-- [Automatic Detection of Synaptic Partners in a Whole-Brain Drosophila EM Dataset](biorxiv link)
-
-
-Note, that this repos is work-in-progress. Please don't hesitate to create an issue or write us an email if something is unclear.
-
-## Synaptic Connections in FAFB
-
-We used the synful method based on an U-Net to predict 244 Million putative synaptic partners in the full adult fly brain (FAFB) dataset.
+This repository serves as an entry point for accessing and interacting with
+predicted synaptic partners in the full adult fly brain (FAFB) dataset.
 
 ![method_figure](docs/_static/fafb_zoom_sequence.jpg)
 
-Synapses will soon be available for browsing in neuroglancer.
+Details about the method can be found in our [bioRxiv preprint](biorxiv link).
 
+If you are interested in
+
+- using predicted synapses for circuit reconstruction in CATMAID, see the
+  [CircuitMap](http://github.com/unidesigner/circuitmap) application
+
+- downloading all 244 million predicted synaptic connections in FAFB, see [this
+  SQL dump](https://cremi.org/static/data/20191211_fafbv14_buhmann2019_li20190805.db)
+  and this [example jupyter notebook](XXX) on how to use it
+
+- using our evaluation data to compare your own synapse prediction method, see
+  this [section](Evaluation-on-large-scale-dataset).
+
+- training and/or predicting on your own data, find our scripts
+  [here](https://github.com/funkelab/synful)
+
+Note that this repository is work-in-progress. Please don't hesitate to create
+an issue or write us an email ([Julia
+Buhmann](mailto:buhmannj@janelia.hhmi.org) or [Jan
+Funke](mailto:funkej@janelia.hhmi.org)) if something is unclear.
 
 ## Evaluation on large-scale dataset
 
-Data and evaluation scripts will be available soon.
+Data and evaluation scripts will be available soon!
