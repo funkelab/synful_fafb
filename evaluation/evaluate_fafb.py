@@ -4,17 +4,14 @@ import logging
 import multiprocessing as mp
 import os
 import sys
-import scipy
-import pandas as pd
 
 import daisy
 import numpy as np
-from lsd import local_segmentation
-from pymongo import MongoClient
-from scipy.spatial import KDTree
+import pandas as pd
 import pymaid
+import scipy
 
-from . import database, synapse, evaluation
+from synful import database, synapse, evaluation
 
 logger = logging.getLogger(__name__)
 
@@ -28,47 +25,43 @@ def csv_to_list(csvfilename, column):
         col_list.append(int(row[column]))
     return col_list
 
-
 class EvaluateFafb():
+    '''Evaluation class for evaluating predicted synapses against ground truth
+    synapses mapped onto skeletons. Evaluation is based on Hungarian matching,
+    each matched predicted synapse is considered True Positive, unmatched
+    predicted synapse False Positive and unmatched ground-truth synapse
+    False Negative. Only synapses are matched in the first place, if they have
+    the right underlying connectivity.
 
-    def __init__(self, pred_db_name, pred_db_host, pred_db_col,
-                 gt_db_name, gt_db_host, gt_db_col,
-                 distance_upper_bound=None, skel_db_name=None,
-                 skel_db_host=None, skel_db_col=None,
+    Args:
+        pred_synlinks (`str`): Json file path to predicted synapses.
+        gt_synlinks (`str`): Json file path to ground truth synapses.
+        results_dir (`str`): Directory to write results jsonfiles to.
+    '''
+
+    def __init__(self, pred_synlinks,
+                 gt_synlinks, results_dir=None,
                  multiprocess=True, matching_threshold=400,
                  matching_threshold_only_post=False,
                  matching_threshold_only_pre=False,
-                 skeleton_ids=None, res_db_host=None,
-                 res_db_name=None, res_db_col=None,
-                 res_db_col_summary=None,
-                 filter_same_id=True, filter_same_id_type='seg',
+                 skeleton_ids=None,
+                 filter_same_id=False, filter_same_id_type='seg',
                  filter_redundant=False,
                  filter_redundant_dist_thr=None, filter_redundant_id_type='seg',
                  only_input_synapses=False,
-                 only_output_synapses=False, overwrite_summary=False,
-                 seg_agglomeration_json=None,
+                 only_output_synapses=False,
                  roi_file=None, syn_dir=None,
                  filter_redundant_dist_type='euclidean',
-                 filter_redundant_ignore_ids=[], syn_score_db=None,
-                 syn_score_db_comb=None, filter_seg_ids=[]):
+                 filter_redundant_ignore_ids=[], filter_seg_ids=[]):
         assert filter_redundant_id_type == 'seg' or filter_redundant_id_type == 'skel'
         assert filter_same_id_type == 'seg' or filter_same_id_type == 'skel'
         assert filter_redundant_dist_type == 'euclidean' or \
                filter_redundant_dist_type == 'geodesic'
-        self.pred_db = pred_db_name
-        self.pred_db_host = pred_db_host
-        self.pred_db_col = pred_db_col
-        self.gt_db_name = gt_db_name
-        self.gt_db_host = gt_db_host
-        self.gt_db_col = gt_db_col
-        self.synapses = []
-        self.seg_id_to_skel = {}
-        self.seg_skel_to_nodes = {}
-        self.distance_upper_bound = distance_upper_bound
+        self.pred_synlinks = pred_synlinks
+        self.gt_synlinks = gt_synlinks
+
         self.matching_threshold = matching_threshold
         self.skeleton_ids = skeleton_ids
-        # self.output_db_col = self.pred_db_col + '_skel_{}'.format('inf' if
-        #                                                           distance_upper_bound is None else distance_upper_bound)
 
         self.multiprocess = multiprocess
 
@@ -83,96 +76,29 @@ class EvaluateFafb():
         self.matching_threshold_only_post = matching_threshold_only_post
         self.matching_threshold_only_pre = matching_threshold_only_pre
         # Where to write out results to
-        self.res_db_host = res_db_host
-        self.res_db_name = res_db_name
-        self.res_db_col = res_db_col
-        self.res_db_col_summary = res_db_col_summary
-        self.overwrite_summary = overwrite_summary
-        self.skel_db_name = skel_db_name
-        self.skel_db_host = skel_db_host
-        self.skel_db_col = skel_db_col
-        self.seg_agglomeration_json = seg_agglomeration_json
+        self.results_dir = results_dir
         self.roi_file = roi_file
         self.syn_dir = syn_dir
         self.filter_same_id_type = filter_same_id_type
         self.filter_redundant_id_type = filter_redundant_id_type
         self.filter_redundant_dist_type = filter_redundant_dist_type
         self.filter_redundant_ignore_ids = filter_redundant_ignore_ids
-        self.syn_score_db = syn_score_db
-        if syn_score_db is None:
-            assert syn_score_db_comb is None, 'syn_score_db_comb is set, although syn_score_db is not set, unclear what to do.'
-
-        self.syn_score_db_comb = syn_score_db_comb
         self.filter_seg_ids = filter_seg_ids
 
+        # Load synapses
+        self.pred_df = pd.read_json(pred_synlinks)
+        self.pred_df = self.pred_df.replace({pd.np.nan: None})
+        self.gt_df = pd.read_json(gt_synlinks)
+        self.gt_df = self.gt_df.replace({pd.np.nan: None})
 
-    def __match_position_to_closest_skeleton(self, position, seg_id, skel_ids):
-        distances = []
-        for skel_id in skel_ids:
-            locations = [np.array(node['position']) for node in
-                         self.seg_skel_to_nodes[(seg_id, skel_id)]]
-            tree = KDTree(locations)
-            dist = tree.query(x=np.array(position), k=1, eps=0, p=2,
-                              distance_upper_bound=np.inf)[0]
-            distances.append(dist)
-        indexmin = np.argmin(np.array(distances))
-        logger.debug('matching node to skeleton with distance: %0.2f '
-                     'compared to average distance: %0.2f' % (
-                         distances[indexmin], np.mean(distances)))
-        if self.distance_upper_bound is not None:
-            if distances[indexmin] > self.distance_upper_bound:
-                logger.debug(
-                    'synapse not mapped because distance {:0.2} '
-                    'bigger than {:}'.format(
-                        distances[indexmin], self.distance_upper_bound))
-                return -2
+    def get_cremi_score(self, score_thr=0, skel_ids=None):
 
-        return skel_ids[indexmin]
-
-    def match_synapses_to_skeleton(self, synapses):
-
-        for ii, syn in enumerate(synapses):
-            logger.debug('{}/{}'.format(ii, len(synapses)))
-            # Allow to filter out synapses based on distance.
-            skel_ids = np.unique(self.seg_id_to_skel.get(syn.id_segm_pre, []))
-            if len(skel_ids) > 0:
-                skel_ids = [
-                    self.__match_position_to_closest_skeleton(syn.location_pre,
-                                                              syn.id_segm_pre,
-                                                              skel_ids)]
-            syn.id_skel_pre = skel_ids[0] if len(skel_ids) > 0 else None
-
-            skel_ids = np.unique(self.seg_id_to_skel.get(syn.id_segm_post, []))
-            if len(skel_ids) > 0:
-                skel_ids = [
-                    self.__match_position_to_closest_skeleton(syn.location_post,
-                                                              syn.id_segm_post,
-                                                              skel_ids)]
-
-            syn.id_skel_post = skel_ids[0] if len(skel_ids) > 0 else None
-        syn_db = database.SynapseDatabase(self.pred_db,
-                                          db_host=self.pred_db_host,
-                                          db_col_name=self.output_db_col,
-                                          mode='r+')
-        syn_db.write_synapses(synapses)
-
-    def get_cremi_score(self, score_thr=0):
-        gt_db = database.SynapseDatabase(self.gt_db_name,
-                                         db_host=self.gt_db_host,
-                                         db_col_name=self.gt_db_col,
-                                         mode='r')
-
-        pred_db = database.SynapseDatabase(self.pred_db,
-                                           db_host=self.pred_db_host,
-                                           db_col_name=self.pred_db_col,
-                                           mode='r')
-
-        client_out = MongoClient(self.res_db_host)
-        db_out = client_out[self.res_db_name]
-        db_out.drop_collection(
-            self.res_db_col + '.thr{}'.format(1000 * score_thr))
-
-        skel_ids = csv_to_list(self.skeleton_ids, 0)
+        if skel_ids is None:
+            assert self.skeleton_ids is not None
+            skel_ids = csv_to_list(self.skeleton_ids, 0)
+        else:
+            assert self.skeleton_ids is None
+            assert type(skel_ids) is list
 
         fpcountall, fncountall, predall, gtall, tpcountall, num_clustered_synapsesall = 0, 0, 0, 0, 0, 0
 
@@ -180,51 +106,25 @@ class EvaluateFafb():
         for skel_id in skel_ids:
             logger.debug('evaluating skeleton {}'.format(skel_id))
             if not self.only_output_synapses and not self.only_input_synapses:
-                pred_synapses = pred_db.synapses.find(
-                    {'$or': [{'pre_skel_id': skel_id},
-                             {'post_skel_id': skel_id}]})
-                gt_synapses = gt_db.synapses.find(
-                    {'$or': [{'pre_skel_id': skel_id},
-                             {'post_skel_id': skel_id}]})
+                pred_synapses = self.pred_df[(self.pred_df.id_skel_pre == skel_id) | (self.pred_df.id_skel_post == skel_id)]
+                gt_synapses = self.gt_df[(self.gt_df.id_skel_pre == skel_id) | (self.gt_df.id_skel_post == skel_id)]
 
             elif self.only_input_synapses:
-                pred_synapses = pred_db.synapses.find({'post_skel_id': skel_id})
-                gt_synapses = gt_db.synapses.find({'post_skel_id': skel_id})
+                pred_synapses = self.pred_df[self.pred_df.id_skel_post == skel_id]
+                gt_synapses = self.gt_df[self.gt_df.id_skel_post == skel_id]
             elif self.only_output_synapses:
-                pred_synapses = pred_db.synapses.find({'pre_skel_id': skel_id})
-                gt_synapses = gt_db.synapses.find({'pre_skel_id': skel_id})
+                pred_synapses = self.pred_df[self.pred_df.id_skel_pre == skel_id]
+                gt_synapses = self.gt_df[self.gt_df.id_skel_pre == skel_id]
             else:
                 raise Exception(
                     'Unclear parameter configuration: {}, {}'.format(
                         self.only_output_synapses, self.only_input_synapses))
 
+            pred_synapses = [synapse.Synapse(**dic) for dic in pred_synapses.to_dict(orient='records')]
 
-
-
-
-            pred_synapses = synapse.create_synapses_from_db(pred_synapses)
             if not len(self.filter_seg_ids) == 0:
                 pred_synapses = [syn for syn in pred_synapses if not (
-                            syn.id_segm_pre in self.filter_seg_ids or syn.id_segm_post in self.filter_seg_ids)]
-            if self.syn_score_db is not None:
-                score_host = self.syn_score_db['db_host']
-                score_db = self.syn_score_db['db_name']
-                score_col = self.syn_score_db['db_col_name']
-                score_db = MongoClient(host=score_host)[score_db][score_col]
-                score_cursor = score_db.find({'synful_id': {'$in': [syn.id for syn in pred_synapses]}})
-                df = pd.DataFrame(score_cursor)
-                for syn in pred_synapses:
-                    if self.syn_score_db_comb is None:
-                        syn.score = float(df[df.synful_id == syn.id].score)
-                    elif self.syn_score_db_comb == 'multiplication':
-                        syn.score *= float(df[df.synful_id == syn.id].score)
-                    elif self.syn_score_db_comb == 'filter':
-                        score = float(df[df.synful_id == syn.id].score)
-                        if score == 0.:
-                            syn.score = 0.
-                    else:
-                        raise Exception(f'Syn_score_db_comb incorrectly set: {self.syn_score_db_comb}')
-
+                        syn.id_segm_pre in self.filter_seg_ids or syn.id_segm_post in self.filter_seg_ids)]
 
             pred_synapses = [syn for syn in pred_synapses if
                              syn.score >= score_thr]
@@ -235,7 +135,6 @@ class EvaluateFafb():
                 elif self.filter_same_id_type == 'skel':
                     pred_synapses = [syn for syn in pred_synapses if
                                      syn.id_skel_pre != syn.id_skel_post]
-            removed_ids = []
             if self.filter_redundant:
                 assert self.filter_redundant_dist_thr is not None
                 num_synapses = len(pred_synapses)
@@ -259,11 +158,10 @@ class EvaluateFafb():
             else:
                 num_clustered_synapses = 0
 
-
             logger.debug(
                 'found {} predicted synapses'.format(len(pred_synapses)))
 
-            gt_synapses = synapse.create_synapses_from_db(gt_synapses)
+            gt_synapses = [synapse.Synapse(**dic) for dic in gt_synapses.to_dict(orient='records')]
             stats = evaluation.synaptic_partners_fscore(pred_synapses,
                                                         gt_synapses,
                                                         matching_threshold=self.matching_threshold,
@@ -272,12 +170,10 @@ class EvaluateFafb():
                                                         use_only_post=self.matching_threshold_only_post)
             fscore, precision, recall, fpcount, fncount, tp_fp_fn_syns = stats
 
+
             # tp_syns, fp_syns, fn_syns_gt, tp_syns_gt = evaluation.from_synapsematches_to_syns(
             #     matches, pred_synapses, gt_synapses)
             tp_syns, fp_syns, fn_syns_gt, tp_syns_gt = tp_fp_fn_syns
-            tp_ids = [tp_syn.id for tp_syn in tp_syns]
-            tp_ids_gt = [syn.id for syn in tp_syns_gt]
-            matched_synapse_ids = [pair for pair in zip(tp_ids, tp_ids_gt)]
             fpcountall += fpcount
             fncountall += fncount
             tpcountall += len(tp_syns_gt)
@@ -286,41 +182,17 @@ class EvaluateFafb():
             num_clustered_synapsesall += num_clustered_synapses
 
             assert len(fp_syns) == fpcount
-            db_dic = {
-                'skel_id': skel_id,
-                'tp_pred': [syn.id for syn in tp_syns],
-                'tp_gt': [syn.id for syn in tp_syns_gt],
-                'fp_pred': [syn.id for syn in fp_syns],
-                'fn_gt': [syn.id for syn in fn_syns_gt],
-                'gtcount': len(gt_synapses),
-                'predcount': len(pred_synapses),
-                'matched_synapse_ids': matched_synapse_ids,
-                'fscore': stats[0],
-                'precision': stats[1],
-                'recall': stats[2],
-                'fpcount': stats[3],
-                'fncount': stats[4],
-                'removed_ids': removed_ids,
-            }
-
-            db_out[self.res_db_col + '.thr{}'.format(1000 * score_thr)].insert(
-                db_dic)
             pred_synapses_all.extend(pred_synapses)
-            logger.info(f'skel id {skel_id} with fscore {fscore:0.2}, precision: {precision:0.2}, recall: {recall:0.2}')
+            logger.info(
+                f'skel id {skel_id} with fscore {float(fscore):0.2}, precision: {float(precision):0.2}, recall: {float(recall):0.2}')
             logger.info(f'fp: {fpcount}, fn: {fncount}')
             logger.info(f'total predicted {len(pred_synapses)}; total gt: {len(gt_synapses)}\n')
 
-        # # Alsow write out synapses:
         pred_dic = {}
         for syn in pred_synapses_all:
             pred_dic[syn.id] = syn
-        print('Number of duplicated syn ids: {} versus {}'.format(len(pred_synapses_all), len(pred_dic)))
-        syn_out = database.SynapseDatabase(self.res_db_name,
-                                           db_host=self.res_db_host,
-                                           db_col_name=self.res_db_col + '.syn_thr{}'.format(
-                                               1000 * score_thr),
-                                           mode='w')
-        syn_out.write_synapses(pred_dic.values())
+        logger.debug('Number of duplicated syn ids: {} versus {}'.format(
+            len(pred_synapses_all), len(pred_dic)))
 
         precision = float(tpcountall) / (tpcountall + fpcountall) if (
                                                                              tpcountall + fpcountall) > 0 else 0.
@@ -344,10 +216,9 @@ class EvaluateFafb():
         result_dic['score_thr'] = score_thr
 
         settings = {}
-        settings['pred_db_col'] = self.pred_db_col
-        settings['pred_db_name'] = self.pred_db_col
-        settings['gt_db_col'] = self.gt_db_col
-        settings['gt_db_name'] = self.gt_db_name
+        settings['pred_synlinks'] = self.pred_synlinks
+        settings['gt_synlinks'] = self.gt_synlinks
+
         settings['filter_same_id'] = self.filter_same_id
         settings['filter_same_id_type'] = self.filter_same_id_type
         settings['filter_redundant'] = self.filter_redundant
@@ -363,28 +234,20 @@ class EvaluateFafb():
         settings['only_input_synapses'] = self.only_input_synapses
         settings['num_clustered_synapses'] = num_clustered_synapsesall
         settings['filter_redundant_dist_type'] = self.filter_redundant_dist_type
-        new_score_db_name = self.syn_score_db['db_name'] + \
-                                   self.syn_score_db[
-                                       'db_col_name'] if self.syn_score_db is not None else 'original score'
-        if self.syn_score_db_comb is not None and new_score_db_name is not None:
-            new_score_db_name += self.syn_score_db_comb
-        settings['new_score_db'] = new_score_db_name
         settings['filter_seg_ids'] = str(self.filter_seg_ids)
 
         result_dic.update(settings)
-
-        db_out[self.res_db_col_summary].insert_one(result_dic)
+        if self.results_dir is not None:
+            resultsfile = self.results_dir + 'results_thr{}.json'.format(1000 * score_thr)
+            logger.info('writing results to {}'.format(resultsfile))
+            with open(resultsfile, 'w') as f:
+                json.dump(result_dic, f)
 
         print('final fscore {:0.2}'.format(fscore))
         print('final precision {:0.2}, recall {:0.2}'.format(precision, recall))
+        return result_dic
 
     def evaluate_synapse_complete(self, score_thresholds):
-        if self.overwrite_summary:
-            client_out = MongoClient(self.res_db_host)
-            db_out = client_out[self.res_db_name]
-            db_out.drop_collection(self.res_db_col_summary)
-            client_out.drop_database(self.res_db_name)
-
         if self.multiprocess:
             pool = mp.Pool(10)
             pool.map(self.get_cremi_score, score_thresholds)
@@ -393,5 +256,3 @@ class EvaluateFafb():
         else:
             for score_thr in score_thresholds:
                 self.get_cremi_score(score_thr)
-
-
