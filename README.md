@@ -24,3 +24,48 @@ Please don't hesitate to open
 an issue or write us an email ([Julia
 Buhmann](mailto:buhmannj@janelia.hhmi.org) or [Jan
 Funke](mailto:funkej@janelia.hhmi.org)) if you have any questions!
+
+## Benchmark dataset and evaluation
+---- work in progress -----
+
+### Datasets
+
+- Neuron skeletons: coming soon.
+- Ground-truth synaptic links are available in this repos:
+`evaluation/data/<brain_region>full_gt.json`
+
+### Evaluation
+
+Evaluation code depends on the synful package. Please install from [synful repos](https://github.com/funkelab/synful).
+
+We also added our predicted synful-synapses as example files.
+Run evaluation on synful-synapses:
+```shell
+cd evaluation
+python run_evaluate.py configs/pb_eval.json
+```
+This should output:
+```
+final fscore 0.59
+final precision 0.62, recall 0.57
+```
+
+To test your own predicted synapses:
+
+1) Predict synapses in the three brain regions for which ground-truth is available
+2) Map predicted synapses onto ground-truth skeletons provided in this repos
+3) Write synapses out into the here required format, see this [section](Synapse-Format)
+4) Adapt the config file and replace `pred_synlinks` with your predicted synapse-filepath (this [line](https://github.com/funkelab/synful_fafb/blob/master/evaluation/configs/eb_eval.json#L2) in the config file).
+
+##### Synapse Format
+Synapses are stored in a json file, each synapse is represented with:
+```python
+{"id": 822988374080568,
+"id_skel_pre": 4429537,
+"id_skel_post": 4210786,
+"location_pre": [89200, 159400, 512924],
+"location_post": [89200, 159412, 512816],
+"score": 8.599292755126953
+```
+See [this file](https://raw.githubusercontent.com/funkelab/synful_fafb/master/evaluation/data/ebfull_gt.json) for an example of predicted synapses stored in the required format.
+Locations are provided in physical units (nm) and z,y,x order.
