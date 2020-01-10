@@ -30,9 +30,8 @@ Funke](mailto:funkej@janelia.hhmi.org)) if you have any questions!
 
 ### Ground-truth datasets
 
-- Neuron skeletons are available in this repos: `evaluation/data/gt_skeletons/<brain_region>_skeletons.json`
-- Ground-truth synaptic links are available in this repos:
-`evaluation/data/<brain_region>full_gt.json`
+- Neuron skeletons are available in `evaluation/data/gt_skeletons/<brain_region>_skeletons.json`
+- Ground-truth synaptic links are available in `evaluation/data/<brain_region>full_gt.json`
 
 | Dataset | Connection count |     Brain Region     | Source                                             |
 |---------|------------------|:--------------------:|----------------------------------------------------|
