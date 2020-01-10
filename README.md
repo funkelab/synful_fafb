@@ -37,8 +37,8 @@ Funke](mailto:funkej@janelia.hhmi.org)) if you have any questions!
 | Dataset | Connection count |     Brain Region     | Source                                             |
 |---------|------------------|:--------------------:|----------------------------------------------------|
 | OutLH   |      11,429      |     lateral horn     | Bates et al. (2019), in preparation (Jefferis Lab) |
-| InOutEB |      61,280      |    ellipsoid body    | Turner-Evans et al. (2019) (Jayaraman Lab)         |
-| InOutPB |      14,779      | protocerebral bridge | Turner-Evans et al. (2019) (Jayaraman Lab)         |
+| InOutEB |      61,280      |    ellipsoid body    | [Turner-Evans et al. (2019)](https://www.biorxiv.org/content/10.1101/847152v1.abstract) (Jayaraman Lab)         |
+| InOutPB |      14,779      | protocerebral bridge | "       |
 
 For more details on the datasets, please refer to our preprint, Table 1 and section `3.4.1 Evaluation:Datasets`.
 
