@@ -34,13 +34,13 @@ Funke](mailto:funkej@janelia.hhmi.org)) if you have any questions!
 - Ground-truth synaptic links are available in `evaluation/data/<brain_region>full_gt.json`
 
 | Dataset | Connection count |     Brain Region     | Source                                             |
-|---------|------------------|:--------------------:|----------------------------------------------------|
+|---------|------------------|:--------------------:|:----------------------------------------------------:|
 | OutLH   |      11,429      |     lateral horn     | Bates et al. (2019), in preparation (Jefferis Lab) |
 | InOutEB |      61,280      |    ellipsoid body    | [Turner-Evans et al. (2019)](https://www.biorxiv.org/content/10.1101/847152v1.abstract) (Jayaraman Lab)         |
-| InOutPB |      14,779      | protocerebral bridge | "       |
+| InOutPB |      14,779      | protocerebral bridge |"|
 
 For more details on the datasets, please refer to our preprint, Table 1 and section `3.4.1 Evaluation:Datasets`.
-
+Note that one dataset used in our preprint (form the calyx) is from an unpublished study (Zheng et al. (2020), in preparation, Bock lab), and will be released upon publication.
 
 
 ### Evaluation
@@ -61,7 +61,7 @@ final precision 0.62, recall 0.57
 
 To test your own predicted synapses:
 
-1) Predict synapses in the three brain regions in FAFB for which ground-truth is available
+1) Predict synapses in the three brain regions in FAFB for which ground-truth is available. Get the raw data for example via cloudvolume, for an example see this [section](Download-the-raw-data-with-cloudvolume)
 2) Map predicted synapses onto ground-truth skeletons provided in this repos
 3) Write synapses out into the here required format, see this [section](Synapse-Format)
 4) Adapt the config file and replace `pred_synlinks` with your predicted synapse-filepath (this [line](https://github.com/funkelab/synful_fafb/blob/master/evaluation/configs/eb_eval.json#L2) in the config file).
@@ -89,3 +89,16 @@ Neurons are represented with a list of nodes. One example node:
 ```
 See [this file](evaluation/data/gt_skeletons/eb_skeletons.json) for an example of ground truth neurons.
 Locations are provided in physical units (nm) and z,y,x order.
+
+##### Download the raw data with cloudvolume
+install cloudvolume from: https://github.com/seung-lab/cloud-volume/tree/master
+
+After installation, you can download the data:
+
+```python
+from cloudvolume import CloudVolume
+CLOUDVOLUME_URL = 'precomputed://gs://neuroglancer-fafb-data/fafb_v14/fafb_v14_orig'
+cv = CloudVolume(CLOUDVOLUME_URL, use_https=True)
+data = cv[<x1>:<x2>, <y1>:<y2>, <z1>:<z2>]
+```
+
