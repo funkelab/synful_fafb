@@ -26,7 +26,6 @@ Buhmann](mailto:buhmannj@janelia.hhmi.org) or [Jan
 Funke](mailto:funkej@janelia.hhmi.org)) if you have any questions!
 
 ## Benchmark dataset and evaluation
----- work in progress -----
 
 ### Ground-truth datasets
 
@@ -44,7 +43,7 @@ Note that one dataset used in our preprint (form the calyx) is from an unpublish
 
 ### Evaluation
 
-Evaluation code depends on the synful package. Please install from [synful repos](https://github.com/funkelab/synful).
+Evaluation code depends on the synful package. Please install from [synful repository](https://github.com/funkelab/synful).
 
 We also added our predicted synful-synapses as example files.
 Run evaluation on synful-synapses:
@@ -61,7 +60,7 @@ final precision 0.62, recall 0.57
 To test your own predicted synapses:
 
 1) Predict synapses in the three brain regions in FAFB for which ground-truth is available. Get the raw data for example via cloudvolume, for an example see this [section](Download-the-raw-data-with-cloudvolume)
-2) Map predicted synapses onto ground-truth skeletons provided in this repos
+2) Map predicted synapses onto ground-truth skeletons provided in this repository
 3) Write synapses out into the here required format, see this [section](Synapse-Format)
 4) Adapt the config file and replace `pred_synlinks` with your predicted synapse-filepath (this [line](https://github.com/funkelab/synful_fafb/blob/master/evaluation/configs/eb_eval.json#L2) in the config file).
 
