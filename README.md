@@ -16,7 +16,7 @@ If you are interested in
   SQL dump](https://cremi.org/static/data/20191211_fafbv14_buhmann2019_li20190805.db)
   and this [example jupyter notebook](https://github.com/flyconnectome/fafbseg-py/blob/query-synapses/notebooks/Synaptic_Partner_Predictions_in_FAFB.ipynb) on how to use it
 
-- using our evaluation data to compare your own synapse prediction method, stay tuned for our data release (end of December 2019)!
+- using our evaluation data to compare your own synapse prediction method, see this [section](Benchmark-dataset-and-evaluation)
 
 - training and/or predicting on your own data, stay tuned for our source code release (end of December 2019)!
 
