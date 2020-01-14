@@ -42,7 +42,6 @@ Funke](mailto:funkej@janelia.hhmi.org)) if you have any questions!
 For more details on the datasets, please refer to our preprint, Table 1 and section `3.4.1 Evaluation:Datasets`.
 Note that one dataset used in our preprint (form the calyx) is from an unpublished study (Zheng et al. (2020), in preparation, Bock lab), and will be released upon publication.
 
-
 ### Evaluation
 
 Evaluation code depends on the synful package. Please install from [synful repos](https://github.com/funkelab/synful).
@@ -102,3 +101,17 @@ cv = CloudVolume(CLOUDVOLUME_URL, use_https=True)
 data = cv[<x1>:<x2>, <y1>:<y2>, <z1>:<z2>]
 ```
 
+##### Visualization with neuroglancer
+If you want to have a quick look at the data, there is a [script](evaluation/data/visualize_data_with_neuroglancer.py) that you just need to run from inside the repository:
+
+Example usage, if you want to visualize the ground truth data for skeleton id 607812 in EB.
+```
+cd evaluation/data
+python -i visualize_data_with_neuroglancer.py gt_skeletons/eb_skeletons.json ebfull_gt.json 607812
+```
+
+or if you want to have a look at our synapse predictions mapped onto the same skeleton.
+
+```
+python -i visualize_data_with_neuroglancer.py gt_skeletons/eb_skeletons.json synful_predictions/ebfull_pred.json 607812
+```
