@@ -16,7 +16,7 @@ If you are interested in
   SQL dump](https://cremi.org/static/data/20191211_fafbv14_buhmann2019_li20190805.db)
   and this [example jupyter notebook](https://github.com/flyconnectome/fafbseg-py/blob/query-synapses/notebooks/Synaptic_Partner_Predictions_in_FAFB.ipynb) on how to use it
 
-- using our evaluation data to compare your own synapse prediction method, stay tuned for our data release (end of December 2019)!
+- using our evaluation data to compare your own synapse prediction method, see this [section](Benchmark-dataset-and-evaluation)
 
 - training and/or predicting on your own data, stay tuned for our source code release (end of December 2019)!
 
@@ -24,3 +24,93 @@ Please don't hesitate to open
 an issue or write us an email ([Julia
 Buhmann](mailto:buhmannj@janelia.hhmi.org) or [Jan
 Funke](mailto:funkej@janelia.hhmi.org)) if you have any questions!
+
+## Benchmark dataset and evaluation
+
+### Ground-truth datasets
+
+- Neuron skeletons are available in `evaluation/data/gt_skeletons/<brain_region>_skeletons.json`
+- Ground-truth synaptic links are available in `evaluation/data/<brain_region>full_gt.json`
+
+| Dataset | Connection count |     Brain Region     | Source                                             |
+|---------|------------------|:--------------------:|:----------------------------------------------------:|
+| OutLH   |      11,429      |     lateral horn     | Bates et al. (2019), in preparation (Jefferis Lab) |
+| InOutEB |      61,280      |    ellipsoid body    | [Turner-Evans et al. (2019)](https://www.biorxiv.org/content/10.1101/847152v1.abstract) (Jayaraman Lab)         |
+| InOutPB |      14,779      | protocerebral bridge |"|
+
+For more details on the datasets, please refer to our preprint, Table 1 and section `3.4.1 Evaluation:Datasets`.
+Note that one dataset used in our preprint (form the calyx) is from an unpublished study (Zheng et al. (2020), in preparation, Bock lab), and will be released upon publication.
+
+### Evaluation
+
+Evaluation code depends on the synful package. Please install from [synful repository](https://github.com/funkelab/synful).
+
+We also added our predicted synful-synapses as example files.
+Run evaluation on synful-synapses:
+```shell
+cd evaluation
+python run_evaluate.py configs/pb_eval.json
+```
+This should output:
+```
+final fscore 0.59
+final precision 0.62, recall 0.57
+```
+
+To test your own predicted synapses:
+
+1) Predict synapses in the three brain regions in FAFB for which ground-truth is available. Get the raw data for example via cloudvolume, for an example see this [section](Download-the-raw-data-with-cloudvolume)
+2) Map predicted synapses onto ground-truth skeletons provided in this repository
+3) Write synapses out into the here required format, see this [section](Synapse-Format)
+4) Adapt the config file and replace `pred_synlinks` with your predicted synapse-filepath (this [line](https://github.com/funkelab/synful_fafb/blob/master/evaluation/configs/eb_eval.json#L2) in the config file).
+
+##### Synapse Format
+Synapses are stored in a json file, each synapse is represented with:
+```python
+{"id": 822988374080568,
+"id_skel_pre": 4429537,
+"id_skel_post": 4210786,
+"location_pre": [89200, 159400, 512924],
+"location_post": [89200, 159412, 512816],
+"score": 8.599292755126953
+```
+See [this file](https://raw.githubusercontent.com/funkelab/synful_fafb/master/evaluation/data/ebfull_gt.json) for an example of predicted synapses stored in the required format.
+Locations are provided in physical units (nm) and z,y,x order.
+
+##### Neuron Format
+Neurons are represented with a list of nodes. One example node:
+```python
+{"id": 1760159,
+"position": [171240, 157706, 482924],
+"neuron_id": 1274114,
+"parent_id": 19713274}
+```
+See [this file](evaluation/data/gt_skeletons/eb_skeletons.json) for an example of ground truth neurons.
+Locations are provided in physical units (nm) and z,y,x order.
+
+##### Download the raw data with cloudvolume
+install cloudvolume from: https://github.com/seung-lab/cloud-volume/tree/master
+
+After installation, you can download the data:
+
+```python
+from cloudvolume import CloudVolume
+CLOUDVOLUME_URL = 'precomputed://gs://neuroglancer-fafb-data/fafb_v14/fafb_v14_orig'
+cv = CloudVolume(CLOUDVOLUME_URL, use_https=True)
+data = cv[<x1>:<x2>, <y1>:<y2>, <z1>:<z2>]
+```
+
+##### Visualization with neuroglancer
+If you want to have a quick look at the data, there is a [script](evaluation/data/visualize_data_with_neuroglancer.py) that you just need to run from inside the repository:
+
+Example usage, if you want to visualize the ground truth data for skeleton id 607812 in EB.
+```
+cd evaluation/data
+python -i visualize_data_with_neuroglancer.py gt_skeletons/eb_skeletons.json ebfull_gt.json 607812
+```
+
+or if you want to have a look at our synapse predictions mapped onto the same skeleton.
+
+```
+python -i visualize_data_with_neuroglancer.py gt_skeletons/eb_skeletons.json synful_predictions/ebfull_pred.json 607812
+```
