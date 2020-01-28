@@ -12,6 +12,8 @@ If you are interested in
 - using predicted synapses for circuit reconstruction in CATMAID, see the
   [CircuitMap](http://github.com/unidesigner/circuitmap) application
 
+- explore synapses linked to google's neuron segmentation in [neuroglancer](https://neuroglancer-demo.appspot.com/fafb.html#!gs://fafb-ffn1/main_ng.json)
+
 - downloading all 244 million predicted synaptic connections in FAFB, see [this
   SQL dump](https://cremi.org/static/data/20191211_fafbv14_buhmann2019_li20190805.db)
   and this [example jupyter notebook](https://github.com/flyconnectome/fafbseg-py/blob/query-synapses/notebooks/Synaptic_Partner_Predictions_in_FAFB.ipynb) on how to use it
