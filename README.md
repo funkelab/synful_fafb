@@ -20,7 +20,7 @@ If you are interested in
 
 - using our evaluation data to compare your own synapse prediction method, see this [section](Benchmark-dataset-and-evaluation)
 
-- training and/or predicting on your own data, stay tuned for our source code release (end of December 2019)!
+- training and/or predicting on your own data, go to the [synful repository](https://github.com/funkelab/synful)!
 
 Please don't hesitate to open
 an issue or write us an email ([Julia
