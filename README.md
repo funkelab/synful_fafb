@@ -1,22 +1,22 @@
 # Automatic Detection of Synaptic Partners in a Whole-Brain Drosophila EM Dataset
 
 This repository serves as an entry point for accessing and interacting with
-predicted synaptic partners in the full adult fly brain (FAFB) dataset.
+predicted synaptic partners in the full adult fly brain (FAFB) dataset  [Zheng et al. 2018].
 
 ![method_figure](docs/_static/fafb_zoom_sequence.jpg)
 
-Details about the method can be found in our [bioRxiv preprint](https://www.biorxiv.org/content/10.1101/2019.12.12.874172v1).
+Details about the method can be found in our [bioRxiv preprint](https://www.biorxiv.org/content/10.1101/2019.12.12.874172v2).
 
 If you are interested in
 
 - using predicted synapses for circuit reconstruction in CATMAID, see the
-  [CircuitMap](http://github.com/unidesigner/circuitmap) application
+  [CircuitMap](https://github.com/catmaid/circuitmap) application
 
 - explore synapses linked to google's neuron segmentation in [neuroglancer](https://neuroglancer-demo.appspot.com/fafb.html#!gs://fafb-ffn1/main_ng.json)
 
 - downloading all 244 million predicted synaptic connections in FAFB, see [this
   SQL dump](https://cremi.org/static/data/20191211_fafbv14_buhmann2019_li20190805.db)
-  and this [example jupyter notebook](https://github.com/flyconnectome/fafbseg-py/blob/query-synapses/notebooks/Synaptic_Partner_Predictions_in_FAFB.ipynb) on how to use it
+  and use our circuit query library [`SynfulCircuit`](https://github.com/funkelab/synfulcircuit) to analyze the data (a good starting point is this [example jupyter notebook](https://github.com/funkelab/synfulcircuit/blob/master/examples/synful_fafb_query_circuit.ipynb))
 
 - using our evaluation data to compare your own synapse prediction method, see this [section](Benchmark-dataset-and-evaluation)
 
