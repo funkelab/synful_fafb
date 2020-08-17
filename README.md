@@ -1,5 +1,7 @@
 # Automatic Detection of Synaptic Partners in a Whole-Brain Drosophila EM Dataset
 
+## Overview
+
 This repository serves as an entry point for accessing and interacting with
 predicted synaptic partners in the full adult fly brain (FAFB) dataset  [Zheng et al. 2018].
 
@@ -26,6 +28,16 @@ Please don't hesitate to open
 an issue or write us an email ([Julia
 Buhmann](mailto:buhmannj@janelia.hhmi.org) or [Jan
 Funke](mailto:funkej@janelia.hhmi.org)) if you have any questions!
+
+## System Requirements
+- Hardware requirements
+  - No special hardware requirements - standard computer with enough RAM (~ 8 GB, of course: more is always better).
+- Software requirements
+  -  Software has been tested on Linux (Ubuntu 16.04)
+
+## Installation Guide
+Scripts in this repository (evaluation/*.py) for evaluation depend on the synful package. Please install from [synful repository](https://github.com/funkelab/synful). Installation takes ~ 3 min.
+
 
 ## Benchmark dataset and evaluation
 
@@ -58,6 +70,8 @@ This should output:
 final fscore 0.59
 final precision 0.62, recall 0.57
 ```
+
+Evaluation runtime of above code is ~1 minute.
 
 To test your own predicted synapses:
 
