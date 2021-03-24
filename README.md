@@ -48,12 +48,12 @@ Scripts in this repository (evaluation/*.py) for evaluation depend on the synful
 
 | Dataset | Connection count |     Brain Region     | Source                                             |
 |---------|------------------|:--------------------:|:----------------------------------------------------:|
+| InCalyx   |      59,155      |     calyx     | [Zheng, Li et al. (2020)](https://www.biorxiv.org/content/10.1101/2020.04.17.047167v2.abstract) (Bock Lab) |
 | OutLH   |      11,429      |     lateral horn     | [Bates, Schlegel et al. (2020)](https://www.biorxiv.org/content/10.1101/2020.01.19.911453v1.abstract) (Jefferis Lab) |
 | InOutEB |      61,280      |    ellipsoid body    | [Turner-Evans et al. (2019)](https://www.biorxiv.org/content/10.1101/847152v1.abstract) (Jayaraman Lab)         |
 | InOutPB |      14,779      | protocerebral bridge |"|
 
 For more details on the datasets, please refer to our preprint, Table 1 and section `3.4.1 Evaluation:Datasets`.
-Note that one dataset used in our preprint (form the calyx) is from an unpublished study (Zheng et al. (2020), in preparation, Bock lab), and will be released upon publication.
 
 ### Evaluation
 
