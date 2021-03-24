@@ -1,0 +1,23 @@
+{
+  "pred_synlinks": "data/synful_predictions/calyx_pred.json",
+  "gt_synlinks": "data/calyx_gt.json",
+  "skeleton_ids": "data/kc_ids_full.csv",
+  "score_thresholds": [60],
+  "only_input_synapses": true,
+  "only_output_synapses": false,
+  "matching_threshold_only_post": false,
+  "matching_threshold_only_pre": true,
+  "matching_threshold": 700,
+    "filter_redundant_ignore_ids": [
+    -2
+  ],
+    "filter_seg_ids": [
+    0
+  ],
+  "filter_redundant": true,
+  "filter_redundant_id_type": "skel",
+  "filter_same_id": true,
+  "filter_same_id_type": "skel",
+  "filter_redundant_dist_thr": 250,
+  "filter_redundant_dist_type": "euclidean"
+}
