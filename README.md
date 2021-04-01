@@ -16,8 +16,7 @@ If you are interested in
 
 - explore synapses linked to google's neuron segmentation in [neuroglancer](https://neuroglancer-demo.appspot.com/fafb.html#!gs://fafb-ffn1/main_ng.json)
 
-- downloading all 244 million predicted synaptic connections in FAFB, see [this
-  SQL dump](https://cremi.org/static/data/20191211_fafbv14_buhmann2019_li20190805.db)
+- downloading all 244 million predicted synaptic connections in FAFB, see [this section](Synapse-SQL-files)
   and use our circuit query library [`SynfulCircuit`](https://github.com/funkelab/synfulcircuit) to analyze the data (a good starting point is this [example jupyter notebook](https://github.com/funkelab/synfulcircuit/blob/master/examples/synful_fafb_query_circuit.ipynb))
 
 - using our evaluation data to compare your own synapse prediction method, see this [section](Benchmark-dataset-and-evaluation)
@@ -28,6 +27,25 @@ Please don't hesitate to open
 an issue or write us an email ([Julia
 Buhmann](mailto:buhmannj@janelia.hhmi.org) or [Jan
 Funke](mailto:funkej@janelia.hhmi.org)) if you have any questions!
+
+## Synapse SQL files
+The 244M predicted synaptic partners have been intersected with an automatically generated neuron segmentation \[Li et al. 2019\].
+So far, we released two different files:
+
+  - `20191211_fafbv14_buhmann2019_li20190805.db`: synapses mapped onto Li-segmentation version `20190805` (synapse file released Dec 2019)
+      [download link](https://cremi.org/static/data/20191211_fafbv14_buhmann2019_li20190805.db)
+  - `fafbv14_buhmann2019_li20200412.db`: synapses mapped onto Li-segmentation version `20200412` (synapse file released April 2021)
+      [download link](https://www.dropbox.com/s/7r2m8eaebiju2v4/fafbv14_buhmann2019_li20200412.db?dl=0)
+
+You can use our `synfulcircuit` library to work with the data.
+In case you prefer to work with the raw data, here is short description of relevant columns:
+
+- pre_x, pre_y, pre_z --> presynaptic location in nm
+- post_x, post_y, post_z --> postsynaptic location in nm
+- segmentid_post
+- segmentid_pre
+- scores --> synful score inferred from the neural network output probability map (see Paper)
+- cleft_scores --> score inferred from cleft score predictions ([Heinrich et al. 2018](https://link.springer.com/chapter/10.1007/978-3-030-00934-2_36)), see Paper
 
 ## System Requirements
 - Hardware requirements
